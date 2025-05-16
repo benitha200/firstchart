@@ -28,7 +28,7 @@ jobs:
           ls
           helm dependency update .
           cd ../..
-          ls
+          ls firstchart
           helm package firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/secring.gpg
 
       - name: 🔑 Verify Chart Signature (optional for testing)
