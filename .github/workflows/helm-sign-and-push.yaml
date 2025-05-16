@@ -3,7 +3,7 @@ name: Sign and Push Helm Chart
 on:
   push:
     paths:
-      - 'charts/**'  # Triggers only if something changes inside 'charts/'
+      - 'charts/**'
 
 jobs:
   release:
@@ -20,10 +20,15 @@ jobs:
       - name: 🔐 Import GPG Key
         run: |
           mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg  # 🔐 Fix permissions
+
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-          echo "use-agent\npinentry-mode loopback" >> ~/.gnupg/gpg.conf
+
+          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf  # ✅ Removed `use-agent`
           echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+
           chmod 600 ~/.gnupg/*
+
           gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --list-secret-keys
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
