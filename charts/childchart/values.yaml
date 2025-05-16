@@ -5,7 +5,7 @@ replicaCount: 1
 
 config:
   port: 8090
-  name: "Values file."
+  name: "Values File."
   description: "child chart values file."
 
 image:
