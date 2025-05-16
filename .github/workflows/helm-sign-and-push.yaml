@@ -37,6 +37,8 @@ jobs:
       - name: 📦 Package and Sign Helm Chart
         run: |
           helm dependency update .
+          cd ../..
+          ls
           ls firstchart
           helm package firstchart/firstchart \
             --sign \
