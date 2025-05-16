@@ -19,34 +19,28 @@ jobs:
 
       - name: 🔐 Import GPG Key
         run: |
+          mkdir -p ~/.gnupg
           echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "use-agent\npinentry-mode loopback" >> ~/.gnupg/gpg.conf
+          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+          chmod 600 ~/.gnupg/*
+          gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --list-secret-keys
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
-      - name: 🔐 Import GPG Key
+      - name: 📦 Package and Sign Helm Chart
         run: |
-         mkdir -p ~/.gnupg
-         echo "$GPG_PRIVATE_KEY" | gpg --batch --import
-         echo "use-agent\npinentry-mode loopback" >> ~/.gnupg/gpg.conf
-         echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-         chmod 600 ~/.gnupg/*
-         gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --list-secret-keys
-        env:
-        GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-       - name: 📦 Package and Sign Helm Chart
-         run: |
           helm dependency update .
           ls firstchart/firstchart
           helm package firstchart/firstchart \
-                   --sign \
-                   --key "$GPG_KEY_ID" \
-                   --keyring ~/.gnupg/pubring.kbx \
-                   --passphrase "$GPG_PASSPHRASE"
+            --sign \
+            --key "$GPG_KEY_ID" \
+            --keyring ~/.gnupg/pubring.kbx \
+            --passphrase "$GPG_PASSPHRASE"
         env:
-        GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-        GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: 🔑 Verify Chart Signature (optional for testing)
         run: |
