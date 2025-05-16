@@ -29,7 +29,7 @@ jobs:
           helm dependency update .
           cd ../..
           ls firstchart/firstchart
-          helm package firstchart/firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/secring.gpg
+          helm package firstchart/firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/pubring.kbx
 
       - name: 🔑 Verify Chart Signature (optional for testing)
         run: |
