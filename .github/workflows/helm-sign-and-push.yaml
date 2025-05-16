@@ -28,8 +28,8 @@ jobs:
           ls
           helm dependency update .
           cd ../..
-          ls firstchart
-          helm package firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/secring.gpg
+          ls firstchart/firstchart
+          helm package firstchart/firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/secring.gpg
 
       - name: 🔑 Verify Chart Signature (optional for testing)
         run: |
