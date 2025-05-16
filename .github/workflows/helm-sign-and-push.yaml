@@ -40,6 +40,7 @@ jobs:
           cd ../..
           ls
           ls firstchart
+          echo "$GPG_PASSPHRASE"
           helm package firstchart/firstchart \
             --sign \
             --key "$GPG_KEY_ID" \

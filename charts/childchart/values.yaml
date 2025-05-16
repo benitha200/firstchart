@@ -4,7 +4,7 @@
 replicaCount: 1
 
 config:
-  port: 9080
+  port: 9070
   name: "values File."
   description: "child chart values file."
 
