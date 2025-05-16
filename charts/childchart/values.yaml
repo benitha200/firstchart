@@ -1,10 +1,11 @@
-# Default values for firstchart.
+# Default values for childchart.
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
+# Declare variables to be passed into your templates
 replicaCount: 1
+
 config:
-  port: 9000
+  port: 8080
+  name: "child chart values file"
 
 image:
   repository: nginx
@@ -60,9 +61,6 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-redis:
-  enabled: false
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

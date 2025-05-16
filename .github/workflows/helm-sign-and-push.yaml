@@ -1,0 +1,41 @@
+name: Sign and Push Helm Chart
+
+on:
+  push:
+    paths:
+      - 'charts/**'  # Triggers only if something changes inside 'charts/'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Set Up Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: 🔐 Import GPG Key
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: 📦 Package and Sign Helm Chart
+        run: |
+          cd charts/mychart
+          helm dependency update .
+          cd ../..
+          helm package charts/mychart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/pubring.kbx
+
+      - name: 🔑 Verify Chart Signature (optional for testing)
+        run: |
+          helm verify mychart-*.tgz || echo "❗ Signature verification failed"
+
+      - name: 📤 Push Chart to OCI Registry
+        run: |
+          helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+          helm push mychart-*.tgz oci://ghcr.io/benitha200
+
