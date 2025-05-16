@@ -37,7 +37,7 @@ jobs:
       - name: 📦 Package and Sign Helm Chart
         run: |
           helm dependency update .
-          ls firstchart/firstchart
+          ls firstchart
           helm package firstchart/firstchart \
             --sign \
             --key "$GPG_KEY_ID" \
