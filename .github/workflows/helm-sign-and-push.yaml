@@ -28,6 +28,7 @@ jobs:
           ls
           helm dependency update .
           cd ../..
+          ls
           helm package ~/firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/pubring.kbx
 
       - name: 🔑 Verify Chart Signature (optional for testing)
