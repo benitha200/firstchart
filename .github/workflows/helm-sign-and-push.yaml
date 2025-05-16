@@ -25,10 +25,11 @@ jobs:
 
       - name: 📦 Package and Sign Helm Chart
         run: |
-          cd charts/mychart
+          ls
+          cd ~/firstchart
           helm dependency update .
           cd ../..
-          helm package charts/mychart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/pubring.kbx
+          helm package ~/firstchart --sign --key ${{ secrets.GPG_KEY_ID }} --keyring ~/.gnupg/pubring.kbx
 
       - name: 🔑 Verify Chart Signature (optional for testing)
         run: |
