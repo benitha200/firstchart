@@ -62,7 +62,7 @@ jobs:
     - name: Characteristics for .cr-gpg/secring.gpg
       run: |
         ls
-        ls firstchart
+        ls templates
         file charts/templates/.cr-gpg/secring.gpg
         wc .cr-gpg/secring.gpg
         wc charts/templates/.cr-gpg/secring.gpg
