@@ -2,60 +2,94 @@ name: Sign and Push Helm Chart
 
 on:
   push:
-    paths:
-      - 'charts/**'
-
+    tags:
+      - 'v.*'
+    branches:
+      - main
 jobs:
-  release:
+  sign-and-push:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Configure Git
+      run: |
+        git config user.name "benitha200"
+        git config user.email "benitha200@users.noreply.github.com"
+    
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.3.0
+      with:
+        version: v3.14.3
 
-      - name: ⚙️ Set Up Helm
-        run: |
-          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    - name: Import GPG private key
+      run: |
+        echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+    
+    - name: Prepare GPG key #this step is for using exported keys and make your github runner
+      run: |
+        gpg_dir=.cr-gpg
+        mkdir "$gpg_dir"
+        keyring="$gpg_dir/secring.gpg" #referring keyring to private key of gpg
+        echo "${{secrets.SECRING_BASE64}}" | base64 -d > "$keyring"
+        passphrase_file="$gpg_dir/passphrase"
+        echo "$GPG_PASSPHRASE" > "$passphrase_file" #storing passphrase data into a file
+        echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV" #saving passphrase into github-environment
+        echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV" #saving private key into github-environemnt
+      env:
+        GPG_KEYRING_BASE64: "${{ secrets.GPG_PRIVATE_KEY }}" #Referring secrets of github above
+        GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"  
 
-      - name: 🔐 Import GPG Key
-        run: |
-          mkdir -p ~/.gnupg
-          chmod 700 ~/.gnupg  # 🔐 Fix permissions
+    - name: List files in .cr-gpg
+      run: ls -la .cr-gpg
 
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --import
 
-          echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf  # ✅ Removed `use-agent`
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
+    # - name: Create secring.pgp to sign
+    #   run: gpg --export-secret-keys > .cr-gpg/secring.gpg
+    # - name: Move the repo to charts
+    #   run: |
+    #     mkdir charts
+    #     find . -mindepth 1 -maxdepth 1 -name .git ! -name charts ! -name .cr-gpg -exec mv -t charts {} +
+    - name: Move CR folder to charts/templates
+      run:  cp -rf .cr-gpg charts/templates
 
-          chmod 600 ~/.gnupg/*
+    - name: Characteristics for .cr-gpg/secring.gpg
+      run: |
+        file charts/templates/.cr-gpg/secring.gpg
+        wc .cr-gpg/secring.gpg
+        wc charts/templates/.cr-gpg/secring.gpg
+        
+    - name: Add repositories
+      run: |
+        for dir in $(ls -d charts/*/); do
+          helm dependency list $dir 2> /dev/null | tail +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
+        done
+      
+    - name: Dependency update
+      run: |
+        cd charts
+        helm dependency update
 
-          gpg --batch --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --list-secret-keys
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    - name: Get home directory
+      run: |
+        echo $HOME
+        pwd
+        
 
-      - name: 📦 Package and Sign Helm Chart
-        run: |
-          helm dependency update .
-          cd ../..
-          ls
-          ls firstchart
-          echo "$GPG_PASSPHRASE"
-          helm package firstchart/firstchart \
-            --sign \
-            --key "$GPG_KEY_ID" \
-            --keyring ~/.gnupg/pubring.kbx \
-            --passphrase "$GPG_PASSPHRASE"
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: 🔑 Verify Chart Signature (optional for testing)
-        run: |
-          helm verify mychart-*.tgz || echo "❗ Signature verification failed"
-
-      - name: 📤 Push Chart to OCI Registry
-        run: |
-          helm registry login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-          helm push mychart-*.tgz oci://ghcr.io/benitha200
-
+    - name: Run chart-releaser #this is used to generate new version of helm chart along with some file with extension .prov
+      uses: helm/chart-releaser-action@v1.7.0
+      # with:
+      #   charts_dir: .
+        
+      env:
+        CR_TOKEN: "${{ secrets.PAT }}"
+        GPG_KEY_ID: "${{ secrets.GPG_KEY_ID }}" #Key name used while creating key
+        CR_SIGN: true
+        CR_SKIP_EXISTING: false
+        CR_MARK_AS_LATEST: true
