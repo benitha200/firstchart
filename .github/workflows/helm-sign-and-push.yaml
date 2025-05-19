@@ -75,20 +75,17 @@ jobs:
 
     - name: Add repositories and update dependencies
       run: |
-        for dir in charts/childchart/*/; do
-          echo "Processing $dir2"
-          
-          # Add repositories from the dependency list
-          if [ -f "$dir/Chart.yaml" ]; then
-            helm dependency list "$dir" 2>/dev/null | tail -n +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do
-              echo "Running: $cmd"
-              $cmd || true  # allow repo to exist already
-            done
-            helm dependency update "$dir2"
-          else
-            echo "Chart.yaml not found in $dir"
-          fi
-        done
+        echo "Processing charts/childchart"
+        if [ -f "charts/childchart/Chart.yaml" ]; then
+          helm dependency list charts/childchart 2>/dev/null | tail -n +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do
+            echo "Running: $cmd"
+            $cmd || true  # ignore if repo already exists
+          done
+          helm dependency update charts/childchart
+        else
+          echo "Chart.yaml not found in charts/childchart"
+        fi
+
 
       
     - name: Dependency update
