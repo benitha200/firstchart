@@ -67,30 +67,15 @@ jobs:
         wc .cr-gpg/secring.gpg
         wc charts/childchart/templates/.cr-gpg/secring.gpg
         
-    # - name: Add repositories
-    #   run: |
-    #     for dir in $(ls -d charts/childchart/*/); do
-    #       helm dependency list $dir 2> /dev/null | tail +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
-    #     done
-
-    - name: Add repositories and update dependencies
+    - name: Add repositories
       run: |
-        echo "Processing charts/childchart"
-        if [ -f "charts/childchart/Chart.yaml" ]; then
-          helm dependency list charts/childchart 2>/dev/null | tail -n +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do
-            echo "Running: $cmd"
-            $cmd || true  # ignore if repo already exists
-          done
-          helm dependency update charts/childchart
-        else
-          echo "Chart.yaml not found in charts/childchart"
-        fi
-
-
+        for dir in $(ls -d charts/childchart/*/); do
+          helm dependency list $dir 2> /dev/null | tail +2 | head -n -1 | awk '{ print "helm repo add " $1 " " $3 }' | while read cmd; do $cmd; done
+        done
       
     - name: Dependency update
       run: |
-        cd charts
+        cd .
         helm dependency update
 
     - name: Get home directory
