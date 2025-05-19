@@ -33,6 +33,14 @@ podLabels: {}
 podSecurityContext: {}
   # fsGroup: 2000
 
+#mysql:
+#  auth:
+#    enabled: false
+#    rootPassword: pass
+#   database: mydb
+#   username: root
+#    password: pass
+
 securityContext: {}
   # capabilities:
   #   drop:
