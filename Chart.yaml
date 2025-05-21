@@ -35,3 +35,7 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
 
+  - name: apache
+    version: ~11.3.8
+    repository: https://charts.bitnami.com/bitnami
+    condition: apache.enabled

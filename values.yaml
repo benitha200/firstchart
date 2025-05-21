@@ -70,7 +70,10 @@ ingress:
   #      - chart-example.local
 
 redis:
-  enabled: false
+  enabled: true
+
+apache:
+  enabled: true
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
